@@ -225,6 +225,8 @@
 #define BOARD_GTM32_PRO_VB     1805   // STM32f103VET6 controller
 #define BOARD_MORPHEUS         1806   // STM32F103C8/STM32F103CB Libmaple based stm32f1 controller
 
+#define BOARD_STM32F1VC        1804 
+
 //
 // STM32 ARM Cortex-M4F
 //

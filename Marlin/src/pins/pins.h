@@ -392,6 +392,8 @@
   #include "pins_GTM32_PRO_VB.h"      // STM32F1                                    env:STM32F1
 #elif MB(MORPHEUS)
   #include "pins_MORPHEUS.h"          // STM32F1                                    env:STM32F1
+#elif MB(STM32F1VC)
+  #include "pins_STM32F1VC.h"
 
 //
 // STM32 ARM Cortex-M4F

@@ -120,13 +120,13 @@ typedef struct {  int16_t X, Y, Z;                                         } tmc
  * EEPROM size is known at compile time!
  */
 typedef struct SettingsDataStruct {
-  char      version[4];                                 // Vnn\0
-  uint16_t  crc;                                        // Data Checksum
+  char      version[4];                                 // Vnn\0          4
+  uint16_t  crc;                                        // Data Checksum  2
 
   //
   // DISTINCT_E_FACTORS
   //
-  uint8_t   esteppers;                                  // XYZE_N - XYZ
+  uint8_t   esteppers;                                  // XYZE_N - XYZ   2
 
   planner_settings_t planner_settings;
 
@@ -286,7 +286,7 @@ typedef struct SettingsDataStruct {
     toolchange_settings_t toolchange_settings;          // M217 S P R
   #endif
 
-} SettingsData;
+} __attribute__((aligned(2))) SettingsData;
 
 MarlinSettings settings;
 
@@ -446,23 +446,38 @@ void MarlinSettings::postprocess() {
     return false;
   }
 
+/*   struct TestStruct {
+      char version[4];   
+      uint16_t hallo;
+      uint8_t test1;
+      uint8_t test2;
+  };
+
+    struct TestStructAl {
+      char version[4];   
+      uint16_t hallo;
+      uint8_t test1;
+      uint8_t test2;
+  } __attribute__((aligned(2))) ; */
   /**
    * M500 - Store Configuration
    */
   bool MarlinSettings::save(PORTARG_SOLO) {
     float dummy = 0;
     char ver[4] = "ERR";
+/*     volatile size_t test= sizeof(TestStruct);
+    volatile size_t test1= sizeof(TestStructAl); */
 
     uint16_t working_crc = 0;
 
     EEPROM_START();
 
     eeprom_error = false;
-    #if ENABLED(FLASH_EEPROM_EMULATION)
+/*     #if ENABLED(FLASH_EEPROM_EMULATION)
       EEPROM_SKIP(ver);   // Flash doesn't allow rewriting without erase
-    #else
+    #else */
       EEPROM_WRITE(ver);  // invalidate data first
-    #endif
+/*     #endif */
     EEPROM_SKIP(working_crc); // Skip the checksum slot
 
     working_crc = 0; // clear before first "real data"
