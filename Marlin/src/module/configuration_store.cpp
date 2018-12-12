@@ -122,6 +122,7 @@ typedef struct {  int16_t X, Y, Z;                                         } tmc
  * Keep this data structure up to date so
  * EEPROM size is known at compile time!
  */
+#pragma pack(push, 2)
 typedef struct SettingsDataStruct {
   char      version[4];                                 // Vnn\0          4
   uint16_t  crc;                                        // Data Checksum  2
@@ -129,7 +130,7 @@ typedef struct SettingsDataStruct {
   //
   // DISTINCT_E_FACTORS
   //
-  uint8_t   esteppers;                                  // XYZE_N - XYZ   2
+  uint8_t   esteppers __attribute__((__aligned__(2)));                                 // XYZE_N - XYZ   2
 
   planner_settings_t planner_settings;
 
@@ -151,7 +152,7 @@ typedef struct SettingsDataStruct {
   // MESH_BED_LEVELING
   //
   float mbl_z_offset;                                   // mbl.z_offset
-  uint8_t mesh_num_x, mesh_num_y;                       // GRID_MAX_POINTS_X, GRID_MAX_POINTS_Y
+  uint8_t mesh_num_x, mesh_num_y  __attribute__((__aligned__(2)));                       // GRID_MAX_POINTS_X, GRID_MAX_POINTS_Y
   #if ENABLED(MESH_BED_LEVELING)
     float mbl_z_values[GRID_MAX_POINTS_X][GRID_MAX_POINTS_Y]; // mbl.z_values
   #else
@@ -172,7 +173,7 @@ typedef struct SettingsDataStruct {
   //
   // AUTO_BED_LEVELING_BILINEAR
   //
-  uint8_t grid_max_x, grid_max_y;                       // GRID_MAX_POINTS_X, GRID_MAX_POINTS_Y
+  uint8_t grid_max_x  __attribute__((__aligned__(2))), grid_max_y  __attribute__((__aligned__(2)));                       // GRID_MAX_POINTS_X, GRID_MAX_POINTS_Y
   int bilinear_grid_spacing[2],
       bilinear_start[2];                                // G29 L F
   #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
@@ -184,8 +185,8 @@ typedef struct SettingsDataStruct {
   //
   // AUTO_BED_LEVELING_UBL
   //
-  bool planner_leveling_active;                         // M420 S  planner.leveling_active
-  int8_t ubl_storage_slot;                              // ubl.storage_slot
+  bool planner_leveling_active  __attribute__((__aligned__(2)));                         // M420 S  planner.leveling_active
+  int8_t ubl_storage_slot  __attribute__((__aligned__(2)));                             // ubl.storage_slot
 
   //
   // SERVO_ANGLES
@@ -236,18 +237,18 @@ typedef struct SettingsDataStruct {
   //
   // POWER_LOSS_RECOVERY
   //
-  bool recovery_enabled;                                // M413 S
+  bool recovery_enabled  __attribute__((__aligned__(2)));                                // M413 S
 
   //
   // FWRETRACT
   //
   fwretract_settings_t fwretract_settings;              // M207 S F Z W, M208 S F W R
-  bool autoretract_enabled;                             // M209 S
+  bool autoretract_enabled  __attribute__((__aligned__(2)));                             // M209 S
 
   //
   // !NO_VOLUMETRIC
   //
-  bool parser_volumetric_enabled;                       // M200 D  parser.volumetric_enabled
+  bool parser_volumetric_enabled  __attribute__((__aligned__(2)));                       // M200 D  parser.volumetric_enabled
   float planner_filament_size[EXTRUDERS];               // M200 T D  planner.filament_size[]
 
   //
@@ -289,7 +290,8 @@ typedef struct SettingsDataStruct {
     toolchange_settings_t toolchange_settings;          // M217 S P R
   #endif
 
-} __attribute__((aligned(2))) SettingsData;
+} SettingsData;
+#pragma pack(pop)
 
 MarlinSettings settings;
 
@@ -449,38 +451,52 @@ void MarlinSettings::postprocess() {
     return false;
   }
 
-/*   struct TestStruct {
+
+  #pragma pack(2)
+    struct TestStruct {
       char version[4];   
-      uint16_t hallo;
+      uint16_t hallo ;
       uint8_t test1;
       uint8_t test2;
   };
+  #pragma pack()
+
+  #pragma pack(2)
+    typedef struct TestStruct1 {
+      char version[4];   
+      uint16_t hallo ;
+      uint8_t test1;
+      uint8_t test2;
+  } __attribute__((__aligned__(2))) TestInstance;
 
     struct TestStructAl {
       char version[4];   
-      uint16_t hallo;
+      uint16_t hallo ;
       uint8_t test1;
-      uint8_t test2;
-  } __attribute__((aligned(2))) ; */
+      uint8_t test31;
+      uint8_t test2 __attribute__((__aligned__(2)));
+  };
+  #pragma pack()
   /**
    * M500 - Store Configuration
    */
   bool MarlinSettings::save(PORTARG_SOLO) {
     float dummy = 0;
     char ver[4] = "ERR";
-/*     volatile size_t test= sizeof(TestStruct);
-    volatile size_t test1= sizeof(TestStructAl); */
+    volatile size_t test0= sizeof(TestStruct);
+    volatile size_t test= sizeof(TestInstance);
+    volatile size_t test1= sizeof(TestStructAl); 
 
     uint16_t working_crc = 0;
 
     EEPROM_START();
 
     eeprom_error = false;
-/*     #if ENABLED(FLASH_EEPROM_EMULATION)
+     #if ENABLED(FLASH_EEPROM_EMULATION)
       EEPROM_SKIP(ver);   // Flash doesn't allow rewriting without erase
-    #else */
+    #else 
       EEPROM_WRITE(ver);  // invalidate data first
-/*     #endif */
+     #endif 
     EEPROM_SKIP(working_crc); // Skip the checksum slot
 
     working_crc = 0; // clear before first "real data"
